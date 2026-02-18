@@ -1,0 +1,176 @@
+# swagger file for coursework
+
+openapi: 3.0.0
+info:
+  title: "CW2 Flask REST API"
+  description: "API for ProfileService about users and other relevant profile data"
+  version: "1.0.0"
+
+servers:
+  - url: "/api"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      x-bearerInfoFunc: config.bearer_auth
+
+  schemas:
+    User:
+      type: "object"
+      required: 
+        - email
+        - username
+      properties:
+        id:
+          type: "integer"
+          readOnly: true
+        username:
+          type: "string"
+        email:
+          type: "string"
+          format: email
+        DoB:
+          type: "string"
+          format: date
+        role:
+          type: "string"
+          enum: [user, admin]
+          default: user
+        location:
+          type: "string"
+        language: 
+          type: "string"
+        
+  parameters:
+    email:
+      name: email
+      description: "Email of the user to get"
+      in: path
+      required: True
+      schema:
+        type: string  
+
+
+paths:
+  /login:
+    post:
+      operationId: "users.login"
+      tags:
+        - Authentication
+      summary: "Login to get token"
+      security: []  
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: "Login successful"
+        "401":
+          description: "Invalid credentials"
+  /users:
+    get:
+      operationId: "users.read_all"
+      tags:
+        - "Users"
+      summary: "Read the list of users"
+      security:
+        - bearerAuth: []
+      responses: 
+        "200":
+          description: "Successfully read list of users"
+        "401":
+          description: "Invalid credentials"
+        "403":
+          description: "You don't have permission for this"
+    post:
+      operationId: "users.create"
+      tags:
+       - Users
+      summary: "Create a user"
+      requestBody:
+          description: "User to create"
+          required: True
+          content:
+            application/json:
+              schema:
+                x-body-name: "user"
+                $ref: "#/components/schemas/User"
+      responses:
+        "201":
+          description: "Successfully created a new user"
+        "401":
+          description: "Invalid credentials"
+        "406":
+          description: "User with that email already exists"
+  /users/{email}:
+    get:
+      operationId: "users.read_one"
+      tags:
+        - Users
+      summary: "Read one user by email"
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/email"
+      responses:
+        "200":
+          description: "Successfully read user"
+        "401":
+          description: "Invalid credentials"
+        "404":
+          description: "User not found"
+    put:
+      operationId: "users.update"
+      tags:
+        - Users
+      summary: "Update a user"
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/email"
+      requestBody:
+        description: "User data to update"
+        required: True
+        content:
+          application/json:
+            schema:
+              x-body-name: "user"
+              $ref: "#/components/schemas/User"
+      responses:
+        "200":
+          description: "Successfully updated user"
+        "401":
+          description: "Invalid credentials"
+        "403":
+          description: "Unauthorised Access"
+        "404":
+          description: "User not found"
+    delete:
+      operationId: "users.delete"
+      tags:
+        - Users
+      summary: "Delete a user"
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/email"
+      responses:
+        "200":
+          description: "Successfully deleted user"
+        "401":
+          description: "Invalid credentials"
+        "403":
+          description: "Unauthorised Access"
+        "404":
+          description: "User not found"
+
